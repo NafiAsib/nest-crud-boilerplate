@@ -1,15 +1,45 @@
-FROM node:16-alpine
+# BUILD FOR LOCAL DEVELOPMENT
 
-WORKDIR /app
+FROM node:18-alpine As development
 
-COPY package*.json ./
+WORKDIR /usr/src/app
+COPY --chown=node:node package*.json ./
+COPY --chown=node:node pnpm-lock.yaml ./
 
-RUN npm install
+#RUN npm ci
+RUN npm i -g pnpm
+RUN pnpm i --frozen-lockfile
 
-COPY . .
+COPY --chown=node:node . .
 
-RUN npm run build
+USER node
 
-EXPOSE 3000
+# BUILD FOR PRODUCTION
 
-CMD ["npm", "run", "start:prod"]
+FROM node:18-alpine As build
+
+WORKDIR /usr/src/app
+
+COPY --chown=node:node package*.json ./
+
+COPY --chown=node:node --from=development /usr/src/app/node_modules ./node_modules
+
+COPY --chown=node:node . .
+
+RUN pnpm run build
+
+ENV NODE_ENV production
+
+# RUN npm ci --only=production && npm cache clean --force
+RUN pnpm i --frozen-lockfile --prod && pnpm cache clean --force
+
+USER node
+
+# PRODUCTION
+
+FROM node:18-alpine As production
+
+COPY --chown=node:node --from=build /usr/src/app/node_modules ./node_modules
+COPY --chown=node:node --from=build /usr/src/app/dist ./dist
+
+CMD [ "node", "dist/main.js" ]

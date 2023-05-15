@@ -1,11 +1,19 @@
 version: '3.9'
 services:
-  nestapp:
-    container_name: nestapp
-    image: nafiasib/nestapp
-    build: .
+  api:
+    # container_name: nestcrud
+    # image: nafiasib/nestcrud
+    build: 
+      dockerfile: Dockerfile
+      context: .
+      target: development
+    volumes:
+      - .:/usr/src/app
     ports:
-      - '3000:3000'
+      - 3000:3000
+    env_file:
+      - .env.development
+    command: pnpm run start:dev
     environment:
       - DB_TYPE=postgres
       - DB_USER=postgres
@@ -23,7 +31,7 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: postgres
     ports:
-      - '5432:5432'
+      - 5432:5432
     volumes:
       - pgdata:/var/lib/postgresql/data
 volumes:

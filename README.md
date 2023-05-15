@@ -11,6 +11,22 @@ $ pnpm install
 ## Running the app
 
 ```bash
+docker compose up -d --build
+```
+
+To get log
+
+```bash
+docker compose logs -f
+```
+
+Only NestJS console log
+
+```bash
+docker compose logs api -f
+```
+
+```bash
 # development
 $ pnpm run start
 
